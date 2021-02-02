@@ -207,7 +207,7 @@ public class Sample05 {
 ```
 `class`키워드 옆에 제네릭 타입을 선언하지 않고 생성자에 제네리타입을 명시하는 방법도 있다.
 
-### 여러개의 제네릭 타입``
+### 여러개의 제네릭 타입
 ```java
 package generic;
 
@@ -234,3 +234,113 @@ public class Sample06 {
 
 ```
 위처럼 제네릭 타입을 선언할때 `,`를  써서 여러개의 제네릭 타입을 선언할 수 있다.
+
+### 제네릭 메소드
+```java
+class Data {
+    String value;
+
+    public <T> void setValue(T value) {
+        this.value = value.toString();
+    }
+
+    public String getValue() {
+        return value;
+    }
+}
+
+public class Sample07 {
+    public static void main(String[] args) {
+        Data data = new Data();
+        data.setValue(3);
+        System.out.println(data.getValue());
+    }
+}
+```
+메소드도 제네릭 타입 선언이 가능하다. 
+
+`[접근제어자] (static) <T> [반환자료형] [메소드명] (T t)`의 형식으로 사용이 가능하다. 물론 제네릭 타입도 타입제한을 둘 수 있다.
+```java
+class NumberBox {
+    public static  <Z extends Number> void setNumber(Z z) {
+        System.out.printf("입력된 값은 [%s]입니다.\n", z.toString());
+    }
+}
+public class Sample08 {
+    public static void main(String[] args) {
+        NumberBox.setNumber(20002);
+        NumberBox.setNumber(20002L);
+        NumberBox.setNumber(123.4);
+//        NumberBox.setNumber("문자열"); // ❗ 컴파일 에러
+//        NumberBox.setNumber("문자열은 에러!"); // ❗ 컴파일 에러
+    }
+}
+```
+`setNumber`함수는 매개변수로`Number`클래스를 상속받는 객체만 상속받는다.
+따라서 매개변수에 `String`타입의 객체를 넘기면 컴파일 에러가 발생한다.`
+
+### 와일드카드
+
+```java
+package generic;
+
+import java.nio.file.Watchable;
+
+class Wrapper<T> {
+    T t;
+
+    public T get() {
+        return t;
+    }
+
+    public void set(T t) {
+        this.t = t;
+    }
+}
+
+class WrapperUtil {
+    public static <T extends Number> void peekWithGenericType(Wrapper<T> wrapper) {
+        System.out.println(wrapper.get());
+    }
+
+    public static void peekWithWildCard(Wrapper<? extends Number> wrapper) {
+        System.out.println(wrapper.get());
+    }
+}
+
+public class Sample09 {
+
+    public static void main(String[] args) {
+        Wrapper<Integer> integerWrapper = new Wrapper<>();
+        Wrapper<Float> floatWrapper = new Wrapper<>();
+        Wrapper<String> stringWrapper = new Wrapper<>();
+
+        integerWrapper.set(1);
+        floatWrapper.set(1.2f);
+        stringWrapper.set("문자열");
+
+        WrapperUtil.peekWithGenericType(integerWrapper);
+        WrapperUtil.peekWithGenericType(floatWrapper);
+//        WrapperUtil.peekWithGenericType(stringWrapper); // ❗ 컴파일 에러
+
+        WrapperUtil.peekWithWildCard(integerWrapper);
+        WrapperUtil.peekWithWildCard(floatWrapper);
+//        WrapperUtil.peekWithWildCard(stringWrapper); // ❗ 컴파일 에러
+    }
+}
+```
+위의 예제처럼 제네릭 메소드를 선언할때 매개변수에 제네릭 타입 대신 와일드카드를 사용할 수 있다. 
+```java
+class WrapperUtil {
+    public static <T extends Number> void peekWithGenericType(Wrapper<T> wrapper) {
+        System.out.println(wrapper.get());
+    } // 제네릭 메소드 정의
+
+    public static void peekWithWildCard(Wrapper<? extends Number> wrapper) {
+        System.out.println(wrapper.get());
+    } // 와일드카드 기반 메소드 정의
+}
+```
+와일드카드 문법은 반환형 옆에 `<T>`와 같이 제네릭 타입을 선언하지 않아도 된다.
+대신 매개변수 인자타입에 제네릭 타입대신 `?`를 쓴다. 와알트카드도 타입제한이 가능하다.
+와일드카드 기반 문법이 좀더 간결해보인다.
