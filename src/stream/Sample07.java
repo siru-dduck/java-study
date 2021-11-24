@@ -1,6 +1,7 @@
 package stream;
 
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 
 class ToyPriceInfo {
@@ -15,6 +16,7 @@ class ToyPriceInfo {
     public int getPrice() {
         return price;
     }
+
 }
 
 public class Sample07 {
