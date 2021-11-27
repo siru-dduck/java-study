@@ -21,10 +21,6 @@ public class Sample03 {
             System.out.printf("드립커피의 가격은 %d원 입니다.\n", price);
         });
 
-        try {
-            Thread.sleep(10000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+        latteFuture.join(); americanoFuture.join(); dripFuture.join();
     }
 }

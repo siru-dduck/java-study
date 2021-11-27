@@ -666,7 +666,7 @@ public class Sample02 {
 
 ### CompletableFuture 개선
 ```java
-class NonBlockCoffeeMachine2 {
+class NonBlockCoffeeMachine {
     private Map<String, Integer> menu;
 
     public NonBlockCoffeeMachine2() {
@@ -691,7 +691,7 @@ class NonBlockCoffeeMachine2 {
 
 public class Sample03 {
     public static void main(String[] args) {
-        NonBlockCoffeeMachine2 coffeeMachine = new NonBlockCoffeeMachine2();
+        NonBlockCoffeeMachine coffeeMachine = new NonBlockCoffeeMachine();
 
         CompletableFuture<Integer> latteFuture = coffeeMachine.getPriceBy("latte"); // 결과가 완성되지 않아도 바로 제어권 반환
         CompletableFuture<Integer> americanoFuture = coffeeMachine.getPriceBy("americano"); // 결과가 완성되지 않아도 바로 제어권 반환
@@ -707,11 +707,7 @@ public class Sample03 {
             System.out.printf("드립커피의 가격은 %d원 입니다.\n", price);
         });
 
-        try {
-            Thread.sleep(10000); // 메인스레드가 끝나면 결과를 못보기 때문에 충분히 기다림
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+        latteFuture.join(); americanoFuture.join(); dripFuture.join(); // 작업이 모두 끝날때까지 대기
     }
 }
 ```
@@ -719,3 +715,36 @@ public class Sample03 {
 `getPriceBy`메소드는 `CompletableFuture`에서 제공하는 `supplyAsync`메소드를 이용해 코드를 간결하게 했다.
 비동기 작업은 common fork/join thread pool에서 진행하게 된다. 그리고 비동기 작업이 완료되었을때 수행할 작업을 람다식으로 즉 콜백함수 
 형태로 작성할 수 있다. `thenAccept`메소드 내에 람다식을 선언해 비동기 작업의 결과를 가지고 후처리를 할 수 있다.
+
+### 여러개의 CompletableFuture 다루기
+```java
+public class Sample04 {
+
+    /**
+     * 커피의 총가격 구하기 예제
+     */
+    public static void main(String[] args) {
+        NonBlockCoffeeMachine coffeeMachine = new NonBlockCoffeeMachine();
+
+        CompletableFuture<Integer> latteFuture = coffeeMachine.getPriceBy("latte"); // 결과가 완성되지 않아도 바로 제어권 반환
+        CompletableFuture<Integer> americanoFuture = coffeeMachine.getPriceBy("americano"); // 결과가 완성되지 않아도 바로 제어권 반환
+        CompletableFuture<Integer> dripFuture = coffeeMachine.getPriceBy("drip"); // 결과가 완성되지 않아도 바로 제어권 반환
+
+        List<CompletableFuture<Integer>> coffeeList = Arrays.asList(latteFuture, americanoFuture, dripFuture);
+
+        int totalPrice = CompletableFuture.allOf(latteFuture, americanoFuture, dripFuture)
+                .thenApply(Void -> coffeeList.stream()
+                        .map(CompletableFuture::join)
+                        .collect(Collectors.toList()))
+                .join()
+                .stream()
+                .mapToInt(i->i)
+                .sum();
+
+        System.out.println("총가격: " + totalPrice);
+    }
+}
+
+```
+여러개의 `CompletableFuture`를 다루기 위해 `allOf`메소드를 사용할 수 있다. `allOf`메소드는 `CompletableFuture<Void>`타입을 반환하므로 
+`thenAccept`처럼 결과값을 인자로 받을 수 없다. `thenAccept`메소드 내부에서 `join`메소드를 이용해 결과값을 가져오는 등의 비동기작업을 처리해야한다.  
